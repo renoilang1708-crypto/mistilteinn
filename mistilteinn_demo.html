@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mistilteinn — Demo Dashboard</title>
+<style>
+  :root{
+    --bg:#f4f7f4;
+    --card:#ffffff;
+    --text:#17221b;
+    --muted:#6b776f;
+    --line:#e0e7e1;
+    --accent:#2f7d4a;
+    --accent-soft:#e8f4eb;
+    --warning:#d89127;
+    --danger:#c84b4b;
+    --shadow:0 8px 28px rgba(28,54,37,.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .wrap{max-width:1100px;margin:auto;padding:28px}
+  header{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:18px;margin-bottom:24px
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{
+    width:48px;height:48px;border-radius:14px;background:var(--accent);
+    display:grid;place-items:center;color:white;font-weight:800;font-size:22px
+  }
+  h1{font-size:25px;margin:0}
+  .subtitle{color:var(--muted);font-size:13px;margin-top:3px}
+  .demo{
+    background:#fff4df;color:#8a5b16;border:1px solid #f0d6a4;
+    padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700;
+  }
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .card{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:18px;padding:20px;box-shadow:var(--shadow)
+  }
+  .label{color:var(--muted);font-size:13px}
+  .value{font-size:32px;font-weight:750;margin:9px 0 3px}
+  .unit{font-size:15px;color:var(--muted);font-weight:500}
+  .status{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:13px;font-weight:700;padding:7px 10px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent)
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .pump-card{grid-column:span 2}
+  .chart-card{grid-column:span 2}
+  .wide{grid-column:1/-1}
+  .pump-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .pump-status{font-size:27px;font-weight:750;margin-top:8px}
+  button{
+    border:0;border-radius:12px;padding:11px 16px;font-weight:700;
+    cursor:pointer;font-size:14px;background:var(--accent);color:white
+  }
+  button.secondary{background:#edf2ee;color:var(--text)}
+  button.danger{background:#f8e9e9;color:var(--danger)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+  .chart{
+    height:230px;position:relative;border-radius:13px;
+    background:linear-gradient(to bottom,rgba(47,125,74,.04),rgba(47,125,74,0));
+    overflow:hidden;margin-top:15px
+  }
+  canvas{width:100%;height:100%}
+  .legend{display:flex;gap:18px;margin-top:10px;color:var(--muted);font-size:12px}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .line-dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  .line-dot.temp{background:var(--warning)}
+  .table-wrap{overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:650}
+  .pill-on{color:var(--accent);font-weight:700}
+  .pill-off{color:var(--muted);font-weight:700}
+  .settings{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .setting-value{font-weight:750}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:24px}
+  @media(max-width:800px){
+    .grid{grid-template-columns:1fr 1fr}
+    .pump-card,.chart-card{grid-column:span 2}
+  }
+  @media(max-width:520px){
+    .wrap{padding:16px}
+    header{align-items:flex-start}
+    .grid{grid-template-columns:1fr}
+    .pump-card,.chart-card,.wide{grid-column:span 1}
+    .settings{grid-template-columns:1fr}
+    .value{font-size:28px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <h1>Mistilteinn</h1>
+        <div class="subtitle">Smart Plant Care System</div>
+      </div>
+    </div>
+    <div class="demo">● DEMO / SIMULATION</div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <div class="label">Kelembapan Tanah</div>
+      <div class="value"><span id="moisture">63.4</span><span class="unit"> %</span></div>
+      <div class="status"><span class="dot"></span><span id="moistureState">Optimal</span></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Suhu Lingkungan</div>
+      <div class="value"><span id="temperature">31.8</span><span class="unit"> °C</span></div>
+      <div class="label">Data diperbarui otomatis</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Koneksi</div>
+      <div class="value" style="font-size:25px">ONLINE</div>
+      <div class="status"><span class="dot"></span>ESP8266</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Batas Penyiraman</div>
+      <div class="value"><span id="thresholdTop">45</span><span class="unit"> %</span></div>
+      <div class="label">Jika kelembapan di bawah batas</div>
+    </div>
+
+    <div class="card pump-card">
+      <div class="label">Status Pompa</div>
+      <div class="pump-row">
+        <div>
+          <div class="pump-status" id="pumpStatus">OFF</div>
+          <div class="label" id="pumpReason">Tanaman tidak membutuhkan penyiraman.</div>
+        </div>
+        <button id="manualBtn" class="secondary" onclick="toggleManual()">Manual ON</button>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="label">Monitoring Sensor</div>
+      <div class="chart"><canvas id="chart"></canvas></div>
+      <div class="legend">
+        <span><i class="line-dot"></i>Kelembapan</span>
+        <span><i class="line-dot temp"></i>Suhu</span>
+      </div>
+    </div>
+
+    <div class="card wide">
+      <div class="label">Pengaturan</div>
+      <div class="settings" style="margin-top:16px">
+        <div>
+          <div style="display:flex;justify-content:space-between">
+            <span>Threshold kelembapan</span>
+            <span class="setting-value"><span id="threshold">45</span>%</span>
+          </div>
+          <input id="thresholdSlider" type="range" min="25" max="70" value="45"
+                 oninput="setThreshold(this.value)">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between">
+            <span>Mode sistem</span>
+            <span class="setting-value" id="modeText">AUTO</span>
+          </div>
+          <div class="controls">
+            <button onclick="setAuto()">AUTO</button>
+            <button class="secondary" onclick="toggleManual()">MANUAL</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card wide">
+      <div class="label">Riwayat Penyiraman</div>
+      <div class="table-wrap" style="margin-top:8px">
+        <table>
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Kelembapan sebelum</th>
+              <th>Durasi</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history">
+            <tr><td>14:32:08</td><td>42.1%</td><td>8 detik</td><td class="pill-on">Selesai</td></tr>
+            <tr><td>11:16:41</td><td>43.7%</td><td>7 detik</td><td class="pill-on">Selesai</td></tr>
+            <tr><td>08:04:19</td><td>44.5%</td><td>6 detik</td><td class="pill-on">Selesai</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>Prototype dashboard — seluruh data pada halaman ini adalah simulasi untuk demo.</footer>
+</div>
+
+<script>
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+
+let moisture = 63.4;
+let temperature = 31.8;
+let threshold = 45;
+let manual = false;
+let pump = false;
+let lastPumpTime = 0;
+
+const moistureHistory = [];
+const tempHistory = [];
+
+for(let i=0;i<45;i++){
+  moistureHistory.push(54 + Math.sin(i/6)*5 + Math.random()*2);
+  tempHistory.push(30 + Math.sin(i/7)*2 + Math.random()*1.5);
+}
+
+function setThreshold(v){
+  threshold = Number(v);
+  document.getElementById('threshold').textContent = threshold;
+  document.getElementById('thresholdTop').textContent = threshold;
+}
+
+function setAuto(){
+  manual = false;
+  document.getElementById('modeText').textContent = 'AUTO';
+  document.getElementById('manualBtn').textContent = 'Manual ON';
+  evaluatePump();
+}
+
+function toggleManual(){
+  manual = !manual;
+  document.getElementById('modeText').textContent = manual ? 'MANUAL' : 'AUTO';
+  document.getElementById('manualBtn').textContent = manual ? 'Manual OFF' : 'Manual ON';
+  if(manual) pump = !pump;
+  else evaluatePump();
+  updateUI();
+}
+
+function evaluatePump(){
+  if(manual) return;
+  if(moisture < threshold){
+    if(!pump){
+      pump = true;
+      lastPumpTime = Date.now();
+      addHistory();
+    }
+  } else {
+    pump = false;
+  }
+  updateUI();
+}
+
+function addHistory(){
+  const now = new Date();
+  const time = now.toLocaleTimeString('id-ID',{hour12:false});
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${time}</td><td>${moisture.toFixed(1)}%</td><td>${6+Math.floor(Math.random()*5)} detik</td><td class="pill-on">Selesai</td>`;
+  document.getElementById('history').prepend(row);
+  while(document.getElementById('history').children.length > 6){
+    document.getElementById('history').lastElementChild.remove();
+  }
+}
+
+function updateUI(){
+  document.getElementById('moisture').textContent = moisture.toFixed(1);
+  document.getElementById('temperature').textContent = temperature.toFixed(1);
+
+  const state = document.getElementById('moistureState');
+  if(moisture < threshold){
+    state.textContent = 'Perlu disiram';
+  }else if(moisture < threshold + 10){
+    state.textContent = 'Cukup';
+  }else{
+    state.textContent = 'Optimal';
+  }
+
+  document.getElementById('pumpStatus').textContent = pump ? 'ON' : 'OFF';
+  document.getElementById('pumpReason').textContent =
+    pump ? 'Pompa sedang aktif.' : 'Tanaman tidak membutuhkan penyiraman.';
+}
+
+function updateData(){
+  // Simulasi perubahan sensor secara perlahan.
+  if(pump){
+    moisture += 2.0 + Math.random()*1.2;
+    if(moisture >= threshold + 7) pump = false;
+  }else{
+    moisture -= 0.35 + Math.random()*0.35;
+  }
+
+  temperature += (Math.random()-0.48)*0.45;
+  temperature = Math.max(27, Math.min(35, temperature));
+  moisture = Math.max(25, Math.min(75, moisture));
+
+  moistureHistory.push(moisture);
+  tempHistory.push(temperature);
+  if(moistureHistory.length > 45) moistureHistory.shift();
+  if(tempHistory.length > 45) tempHistory.shift();
+
+  evaluatePump();
+  updateUI();
+  drawChart();
+}
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width*dpr;
+  canvas.height = rect.height*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  drawChart();
+}
+
+function drawChart(){
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+
+  const pad = {l:12,r:12,t:15,b:20};
+  const cw = w-pad.l-pad.r;
+  const ch = h-pad.t-pad.b;
+
+  ctx.strokeStyle = '#e5ebe6';
+  ctx.lineWidth = 1;
+  for(let i=0;i<5;i++){
+    const y = pad.t + (ch*i/4);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+  }
+
+  function drawLine(data, min, max, stroke){
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    data.forEach((v,i)=>{
+      const x = pad.l + i*cw/(data.length-1);
+      const y = pad.t + (1-(v-min)/(max-min))*ch;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  }
+
+  drawLine(moistureHistory,20,80,'#2f7d4a');
+  drawLine(tempHistory,25,36,'#d89127');
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+updateUI();
+setInterval(updateData, 1800);
+</script>
+</body>
+</html>
